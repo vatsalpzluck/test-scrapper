@@ -272,25 +272,31 @@ from selenium.common.exceptions import TimeoutException, StaleElementReferenceEx
 import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import time
 import json
 import os
+import time
 
 # Google Sheets Config
 SHEET_NAME = "IPO_GMP_Data"  # Change to your Google Sheet name
 WORKSHEET_NAME = "Sheet1"  # Change to your sheet name
 
 def setup_google_sheets():
-    """Authenticate using environment variable and return Google Sheets client."""
+    """Authenticate and return Google Sheets client using GitHub Secrets."""
     try:
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        print("🔑 Setting up Google Sheets authentication...")
         
-        # 🟢 Load credentials from environment variable instead of file
-        creds_json = json.loads(os.getenv("GOOGLE_CREDENTIALS"))
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_json, scope)
-
-        client = gspread.authorize(creds)
+        # Load Google credentials from GitHub Actions environment variable
+        creds_json = os.getenv("GOOGLE_CREDENTIALS")
+        if not creds_json:
+            raise ValueError("❌ GOOGLE_CREDENTIALS environment variable is missing!")
+        
+        creds = json.loads(creds_json)
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        credentials = ServiceAccountCredentials.from_json_keyfile_dict(creds, scope)
+        
+        client = gspread.authorize(credentials)
         sheet = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
+        
         print("✅ Google Sheets connection established")
         return sheet
     except Exception as e:
@@ -300,6 +306,7 @@ def setup_google_sheets():
 def setup_driver():
     """Setup headless Chrome driver"""
     try:
+        print("🔧 Setting up Chrome WebDriver...")
         chrome_options = Options()
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--headless')
@@ -354,6 +361,7 @@ def extract_table_data(driver, rows):
 def update_google_sheet(sheet, data, headers):
     """Upload data to Google Sheets"""
     try:
+        print("📤 Uploading data to Google Sheets...")
         sheet.clear()  # Clear existing data
         sheet.append_row(headers)  # Add headers
         sheet.append_rows(data)  # Add new data
@@ -389,7 +397,3 @@ def scrape_ipo_gmp():
 if __name__ == "__main__":
     scrape_ipo_gmp()
 
-            print("✅ Chrome driver closed successfully")
-
-# Run the script
-scrape_ipo_gmp()
