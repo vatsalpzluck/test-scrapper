@@ -2,25 +2,25 @@ name: Run Scraper Every 30 Min
 
 on:
   schedule:
-    - cron: "*/30 * * * *"  # Runs every 30 minutes
-  workflow_dispatch:  # Allows manual trigger
+    - cron: '*/30 * * * *'  # Har 30 min me run karega
+  workflow_dispatch:  # Manual trigger ke liye
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Set Up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+          python-version: '3.10'
+      
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
 
       - name: Run Scraper
-        run: python main.py
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}  # ✅ Secret inject ho raha hai
+        run: python main.py  # ✅ Scraper run karega
